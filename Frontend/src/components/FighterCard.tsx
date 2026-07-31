@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Copy, Check, Crown, Bot, Terminal } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import type { ModelMetadata } from '../types';
-
-
 
 interface FighterCardProps {
   id: 'solution_1' | 'solution_2';
@@ -93,20 +93,20 @@ export const FighterCard: React.FC<FighterCardProps> = ({
       )}
 
       {/* Content Area */}
-      <div className="p-4 flex-1 flex flex-col justify-between gap-4 min-h-[320px] bg-slate-50">
+      <div className="p-4 flex-1 flex flex-col justify-between gap-4 min-h-[360px] bg-slate-50">
         {isLoading ? (
-          <div className="flex-1 flex flex-col items-center justify-center py-12 gap-3">
+          <div className="flex-1 flex flex-col items-center justify-center py-16 gap-3">
             <div className="w-12 h-12 border-4 border-black border-t-[#FF007A] rounded-full animate-spin"></div>
             <p className="font-mono text-sm font-bold animate-pulse text-black">
               Generating Fighter Solution...
             </p>
           </div>
         ) : solutionText ? (
-          <div className="relative group flex-1">
+          <div className="relative group flex-1 flex flex-col">
             {/* Copy Button */}
             <button
               onClick={handleCopy}
-              className="absolute top-2 right-2 z-10 bg-black hover:bg-slate-800 text-white p-2 border-2 border-black shadow-brutal-sm active:translate-x-0.5 active:translate-y-0.5 transition-all text-xs font-mono font-bold flex items-center gap-1 cursor-pointer"
+              className="absolute top-2 right-2 z-20 bg-black hover:bg-slate-800 text-white p-2 border-2 border-black shadow-brutal-sm active:translate-x-0.5 active:translate-y-0.5 transition-all text-xs font-mono font-bold flex items-center gap-1 cursor-pointer"
               title="Copy solution"
             >
               {copied ? (
@@ -122,12 +122,84 @@ export const FighterCard: React.FC<FighterCardProps> = ({
               )}
             </button>
 
-            <div className="bg-white border-3 border-black p-4 font-mono text-sm text-black whitespace-pre-wrap overflow-x-auto max-h-[450px] leading-relaxed shadow-inner">
-              {solutionText}
+            {/* Rendered Markdown Box */}
+            <div className="bg-white border-3 border-black p-5 text-sm text-black overflow-y-auto max-h-[550px] leading-relaxed shadow-inner font-sans">
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={{
+                  h1: ({ children }) => (
+                    <h1 className="text-xl font-black uppercase text-black border-b-3 border-black pb-1.5 my-4">{children}</h1>
+                  ),
+                  h2: ({ children }) => (
+                    <h2 className="text-lg font-black uppercase text-black border-b-2 border-black pb-1 my-3">{children}</h2>
+                  ),
+                  h3: ({ children }) => (
+                    <h3 className="text-base font-black uppercase text-black my-2.5">{children}</h3>
+                  ),
+                  p: ({ children }) => (
+                    <p className="mb-3 leading-relaxed text-black font-sans font-medium text-sm">{children}</p>
+                  ),
+                  strong: ({ children }) => (
+                    <strong className="font-black text-black bg-[#FFE600] px-1 border border-black/40">{children}</strong>
+                  ),
+                  ul: ({ children }) => (
+                    <ul className="list-disc list-inside space-y-1.5 mb-4 font-medium pl-1">{children}</ul>
+                  ),
+                  ol: ({ children }) => (
+                    <ol className="list-decimal list-inside space-y-1.5 mb-4 font-medium pl-1">{children}</ol>
+                  ),
+                  li: ({ children }) => (
+                    <li className="leading-relaxed font-sans">{children}</li>
+                  ),
+                  code: ({ className, children }) => {
+
+                    const isInline = !className;
+                    return isInline ? (
+                      <code className="bg-black text-[#FFE600] font-mono text-xs px-1.5 py-0.5 border border-black font-bold">
+                        {children}
+                      </code>
+                    ) : (
+                      <code className="font-mono text-xs text-[#FFE600]">{children}</code>
+                    );
+                  },
+                  pre: ({ children }) => (
+                    <pre className="bg-black text-[#FFE600] p-4 border-3 border-black shadow-brutal-sm overflow-x-auto font-mono text-xs my-4 leading-relaxed">
+                      {children}
+                    </pre>
+                  ),
+                  table: ({ children }) => (
+                    <div className="overflow-x-auto my-4 border-3 border-black shadow-brutal-sm">
+                      <table className="w-full text-left border-collapse font-sans text-xs">{children}</table>
+                    </div>
+                  ),
+                  thead: ({ children }) => (
+                    <thead className="bg-[#FFE600] text-black border-b-3 border-black font-black uppercase text-xs">{children}</thead>
+                  ),
+                  tbody: ({ children }) => (
+                    <tbody className="divide-y-2 divide-black bg-white">{children}</tbody>
+                  ),
+                  tr: ({ children }) => (
+                    <tr className="hover:bg-yellow-50 transition-colors">{children}</tr>
+                  ),
+                  th: ({ children }) => (
+                    <th className="p-2.5 border-r-2 border-black font-black uppercase tracking-wider">{children}</th>
+                  ),
+                  td: ({ children }) => (
+                    <td className="p-2.5 border-r-2 border-black font-medium">{children}</td>
+                  ),
+                  blockquote: ({ children }) => (
+                    <blockquote className="border-l-4 border-black bg-[#00E5FF]/20 p-3 italic my-3 font-mono text-xs font-semibold">
+                      {children}
+                    </blockquote>
+                  ),
+                }}
+              >
+                {solutionText}
+              </ReactMarkdown>
             </div>
           </div>
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center py-12 text-black/50 border-3 border-dashed border-black/30 bg-white">
+          <div className="flex-1 flex flex-col items-center justify-center py-16 text-black/50 border-3 border-dashed border-black/30 bg-white">
             <Bot className="w-12 h-12 mb-2 stroke-1" />
             <p className="font-mono text-xs font-bold uppercase">Awaiting Prompt Execution</p>
           </div>
