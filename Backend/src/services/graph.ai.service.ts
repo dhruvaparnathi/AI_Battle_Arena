@@ -1,52 +1,52 @@
-import { StateSchema, MessagesValue, StateGraph, START, END, ReducedValue } from "@langchain/langgraph";
-import type { GraphNode } from "@langchain/langgraph";
-import { createAgent, HumanMessage, providerStrategy } from "langchain";
-import { googleModel, mistralModel, cohereModel } from "./models.service.js"
-import * as z from 'zod';
+import { Annotation, StateGraph, START, END } from "@langchain/langgraph";
+import { HumanMessage, BaseMessage } from "@langchain/core/messages";
+import { createAgent, providerStrategy } from "langchain";
+import { googleModel, mistralModel, cohereModel } from "./models.service.js";
+import * as z from "zod";
 
-const state = new StateSchema({
-    messages: MessagesValue,
-    solution_1: new ReducedValue(z.string().default(""),{
-        reducer: (current, next)=>{
-            return next
-        },
+const GraphAnnotation = Annotation.Root({
+    messages: Annotation<BaseMessage[]>({
+        reducer: (x, y) => x.concat(y),
+        default: () => [],
     }),
-    solution_2: new ReducedValue(z.string().default(""),{
-        reducer: (current, next)=>{
-            return next
-        },
+    solution_1: Annotation<string>({
+        reducer: (x, y) => y ?? x,
+        default: () => "",
     }),
-    judge: new ReducedValue(z.object({
-        winner: z.string(),
-        reasoning: z.string(),
-    }).default({
-        winner: "",
-        reasoning: "",
-    }),{
-        reducer: (current, next)=>{
-            return next
-        },
-    })
+    solution_2: Annotation<string>({
+        reducer: (x, y) => y ?? x,
+        default: () => "",
+    }),
+    judge: Annotation<{
+        winner: string;
+        reasoning: string;
+        solution_1_score?: number;
+        solution_2_score?: number;
+    }>({
+        reducer: (x, y) => y ?? x,
+        default: () => ({ winner: "", reasoning: "" }),
+    }),
 });
 
-const solutionNode: GraphNode<typeof State> = async (state:typeof State)=>{
-    console.log(state.messages);
+type GraphState = typeof GraphAnnotation.State;
 
-    const [ mistralResult,cohereResult ]= await Promise.all([
-        mistralModel.invoke(state.messages[0].text),
-        cohereModel.invoke(state.messages[0].text),
-    ])
+const solutionNode = async (state: GraphState) => {
+    const prompt = state.messages[0]?.content ? String(state.messages[0].content) : "";
+
+    const [mistralResult, cohereResult] = await Promise.all([
+        mistralModel.invoke(prompt),
+        cohereModel.invoke(prompt),
+    ]);
 
     return {
-        solution_1: mistralResult.text,
-        solution_2: cohereResult.text
+        solution_1: String(mistralResult.content),
+        solution_2: String(cohereResult.content),
     };
-    
-}
+};
 
-const judgeNode: GraphNode<typeof State> = async(state:typeof State) =>{
-
-    const { solution_1, solution_2 } = state;
+const judgeNode = async (state: GraphState) => {
+    const { solution_1, solution_2, messages } = state;
+    const promptList = messages.map((m) => String(m.content)).join("\n");
 
     const judge = createAgent({
         model: googleModel,
@@ -57,7 +57,7 @@ const judgeNode: GraphNode<typeof State> = async(state:typeof State) =>{
             winner: z.enum(["Solution-1", "Solution-2"]),
             reasoning: z.string(),
         }))
-    })
+    });
 
     const judgeResponse = await judge.invoke({
         messages: [
@@ -66,63 +66,42 @@ const judgeNode: GraphNode<typeof State> = async(state:typeof State) =>{
                 
                 The user asked:
                 
-                "${state.messages.map((message) => message.text).join("\n")}"
+                "${promptList}"
                 
                 Here are the two solutions:
                 
-                Solution 1: ${state.solution_1}
+                Solution 1: ${solution_1}
                 
-                Solution 2: ${state.solution_2}
+                Solution 2: ${solution_2}
                 
                 Please evaluate which solution better addresses the user's problem and provide a score for each solution (0-10) and a winner.
                 `
             )
         ]
-    })
+    });
 
-    const result = judgeResponse.structuredResponse
+    const result = judgeResponse.structuredResponse;
 
     return {
-        judge_recommendation: result
+        judge: result
     };
-}
+};
 
-const graph = new StateGraph(state);
-graph.addNode("solution", solutionNode);
-graph.addNode("judge", judgeNode);
-graph.addEdge(START, "solution");
-graph.addEdge("solution", "judge");
-graph.addEdge("judge", END);
-graph.compile()
+const workflow = new StateGraph(GraphAnnotation)
+    .addNode("solution", solutionNode)
+    .addNode("judge_eval", judgeNode)
+    .addEdge(START, "solution")
+    .addEdge("solution", "judge_eval")
+    .addEdge("judge_eval", END);
 
-export default async function(userMessage:string){
-    const result = await graph.invoke({
-        messages:[
+
+const app = workflow.compile();
+
+export default async function useGraph(userMessage: string) {
+    const result = await app.invoke({
+        messages: [
             new HumanMessage(userMessage)
         ]
-    })
-    return result.messages
-}
-// type JUDGEMENT = {
-//     winner: "Solution-1" | "Solution-2";
-//     reasoning: string;
-// }
-
-// type AIBATTLEARENA = {
-//     messages: typeof MessagesValue;
-//     solution_1: string;
-//     solution_2: string;
-//     Judgement: JUDGEMENT;
-// }
-
-// const state: AIBATTLEARENA = {
-//     messages: MessagesValue,
-//     solution_1: "",
-//     solution_2: "",
-//     Judgement: {
-//         winner: "Solution-1",
-//         solution_1_score: 0,
-//         solution_2_score: 0,
-//         reasoning: "",
-//     }
-// }
+    });
+    return result;
+}

@@ -1,13 +1,16 @@
 import express from 'express';
+import cors from 'cors';
 import useGraph from "./services/graph.ai.service.js";
 
 const app = express();
 
+app.use(cors());
 app.use(express.json());
 
 app.get('/', (req, res) => {
     res.send('Hello World!');
 });
+
 
 app.post("/ai/graph", async(req, res) => {
     try {
