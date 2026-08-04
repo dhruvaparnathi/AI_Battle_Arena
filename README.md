@@ -2,6 +2,8 @@
 
 > **Real-Time Multi-LLM Benchmark & Evaluation Arena Powered by LangGraph**
 
+[![Live Demo](https://img.shields.io/badge/🚀_Live_Demo-ai--battlearena.netlify.app-00E5FF?style=for-the-badge&logo=netlify&logoColor=white)](https://ai-battlearena.netlify.app/)
+
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Vite](https://img.shields.io/badge/Vite-8.x-646CFF?logo=vite&logoColor=white)](https://vitejs.dev/)
@@ -9,6 +11,9 @@
 [![Express](https://img.shields.io/badge/Express-5.x-000000?logo=express&logoColor=white)](https://expressjs.com/)
 [![LangGraph](https://img.shields.io/badge/LangGraph-State_Machine-FF4154?logo=langchain&logoColor=white)](https://www.langchain.com/langgraph)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
+🌐 **Live Demo**: [https://ai-battlearena.netlify.app/](https://ai-battlearena.netlify.app/)  
+⚡ **Backend API**: `https://ai-models-battle-arena.onrender.com`
 
 **AI Battle Arena** is an interactive web platform that pits top LLMs head-to-head in real time. Give the arena a prompt—whether it's complex code, system architecture, or creative reasoning—and watch two AI contenders draft solutions simultaneously. An automated AI Referee evaluates both entries using structured JSON scoring, picks a winner, and explains its reasoning in detail.
 
