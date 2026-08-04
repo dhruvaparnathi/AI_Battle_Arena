@@ -1,0 +1,10 @@
+[[redirects]]
+  from = "/ai/*"
+  to = "https://ai-models-battle-arena.onrender.com/ai/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

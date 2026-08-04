@@ -82,8 +82,8 @@ export function App() {
     setBattleData(null);
 
     try {
-      // API call to Express backend proxy (/ai/graph) or direct port 3000
-      const response = await fetch('/ai/graph', {
+      const apiBase = import.meta.env.VITE_API_URL || '';
+      const response = await fetch(`${apiBase}/ai/graph`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userMessage: userPrompt }),
@@ -104,7 +104,7 @@ export function App() {
     } catch (err: any) {
       console.error(err);
       setErrorMsg(
-        err.message || 'Error connecting to backend server on port 3000. Make sure the backend server is running.'
+        err.message || 'Error connecting to backend server. Make sure the backend service is running on Render.'
       );
     } finally {
       setIsLoading(false);
