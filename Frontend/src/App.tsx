@@ -126,6 +126,9 @@ export function App() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        if (response.status === 504) {
+          throw new Error('504 Gateway Timeout: Response took over 30s. Prompt max output tokens have been tuned for faster generation.');
+        }
         throw new Error(errorData.message || `Server error (${response.status})`);
       }
 

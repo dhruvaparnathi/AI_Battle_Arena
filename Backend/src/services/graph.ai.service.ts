@@ -31,7 +31,8 @@ const GraphAnnotation = Annotation.Root({
 type GraphState = typeof GraphAnnotation.State;
 
 const solutionNode = async (state: GraphState) => {
-    const prompt = state.messages[0]?.content ? String(state.messages[0].content) : "";
+    const rawPrompt = state.messages[0]?.content ? String(state.messages[0].content) : "";
+    const prompt = rawPrompt + "\n\n[System Note: Provide a clear, high-quality, direct solution without filler text or unnecessary preamble.]";
 
     const mistralTask = mistralModel
         .invoke(prompt)

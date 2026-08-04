@@ -7,15 +7,17 @@ import { ChatCohere } from "@langchain/cohere";
 export const googleModel = new ChatGoogle({
     apiKey: config.GEMINI_API_KEY,
     model: "gemini-flash-latest",
+    maxOutputTokens: 500,
 });
 
 export const mistralModel = new ChatMistralAI({
     apiKey: config.MISTRAL_API_KEY,
     model: "mistral-medium-latest",
+    maxTokens: 650,
 });
 
 export const cohereModel = new ChatCohere({
     apiKey: config.COHERE_API_KEY,
-    model: "command-a-03-2025",  
+    model: "command-a-03-2025",
 });
 
