@@ -54,7 +54,7 @@ const judgeNode = async (state: GraphState) => {
         responseFormat: providerStrategy(z.object({
             solution_1_score: z.number().min(0).max(10),
             solution_2_score: z.number().min(0).max(10),
-            winner: z.enum(["Solution-1", "Solution-2"]),
+            winner: z.enum(["Solution-1", "Solution-2", "Tie"]),
             reasoning: z.string(),
         }))
     });
@@ -74,13 +74,20 @@ const judgeNode = async (state: GraphState) => {
                 
                 Solution 2: ${solution_2}
                 
-                Please evaluate which solution better addresses the user's problem and provide a score for each solution (0-10) and a winner.
+                Please evaluate which solution better addresses the user's problem and provide a score for each solution (0-10), a detailed reasoning, and a winner ("Solution-1", "Solution-2", or "Tie").
+                
+                CRITICAL JUDGING RULE:
+                If both solutions have equal score/quality (or if solution_1_score === solution_2_score), you MUST set winner to "Tie".
                 `
             )
         ]
     });
 
     const result = judgeResponse.structuredResponse;
+
+    if (result && (result.solution_1_score === result.solution_2_score || result.winner === "Tie")) {
+        result.winner = "Tie";
+    }
 
     return {
         judge: result

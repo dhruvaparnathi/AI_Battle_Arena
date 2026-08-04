@@ -1,5 +1,5 @@
 export interface JudgeResult {
-  winner: 'Solution-1' | 'Solution-2' | string;
+  winner: 'Solution-1' | 'Solution-2' | 'Tie' | string;
   reasoning: string;
   solution_1_score?: number;
   solution_2_score?: number;

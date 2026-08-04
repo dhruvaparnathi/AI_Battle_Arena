@@ -26,8 +26,9 @@
   - **Fighter 2**: **Command-A** (`command-a-03-2025`) via `@langchain/cohere`
 - 👨‍⚖️ **Automated AI Referee**: Powered by **Google Gemini** (`gemini-flash-latest`), acting as an impartial judge that returns:
   - Numerical scores (0–10) for each solution.
-  - Formatted winner declaration (`Solution-1` vs `Solution-2`).
+  - Formatted winner declaration (`Solution-1` vs `Solution-2` vs `Tie`).
   - Structured, granular justification for the final verdict.
+- 🤝 **Tie Resolution Protocol**: Automated tie enforcement whenever model solutions produce identical scores or equal quality.
 - ⚡ **LangGraph Execution Engine**: Graph-based state machine (`@langchain/langgraph`) orchestrating state propagation, parallel contender generation, and Zod schema-enforced evaluation nodes.
 - 🎨 **Cyberpunk Battle Arena UI**: High-energy futuristic design featuring:
   - Live victory celebrations with confetti animations.
@@ -215,7 +216,7 @@ Runs the full LangGraph workflow: invokes Mistral Medium and Cohere Command-A in
     "judge": {
       "solution_1_score": 9,
       "solution_2_score": 8,
-      "winner": "Solution-1",
+      "winner": "Solution-1", // "Solution-1" | "Solution-2" | "Tie"
       "reasoning": "Solution 1 provided a cleaner TypeScript implementation using a Map to maintain key insertion order..."
     }
   }

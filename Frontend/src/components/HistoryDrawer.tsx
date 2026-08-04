@@ -62,9 +62,27 @@ export const HistoryDrawer: React.FC<HistoryDrawerProps> = ({
                     <Calendar className="w-3.5 h-3.5 text-black" />
                     {new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </span>
-                  <span className="bg-[#00E5FF] text-black px-1.5 py-0.5 border border-black font-black uppercase text-[10px]">
-                    Winner: {item.data.judge.winner}
-                  </span>
+                  {(() => {
+                    const isTie =
+                      item.data.judge.winner === 'Tie' ||
+                      item.data.judge.winner === "IT'S A TIE" ||
+                      item.data.judge.winner === 'DRAW' ||
+                      (item.data.judge.solution_1_score !== undefined &&
+                        item.data.judge.solution_2_score !== undefined &&
+                        item.data.judge.solution_1_score === item.data.judge.solution_2_score);
+                    const winnerLabel = isTie
+                      ? 'Tie 🤝'
+                      : item.data.judge.winner === 'Solution-1'
+                      ? 'Mistral'
+                      : item.data.judge.winner === 'Solution-2'
+                      ? 'Command-A'
+                      : item.data.judge.winner;
+                    return (
+                      <span className="bg-[#00E5FF] text-black px-1.5 py-0.5 border border-black font-black uppercase text-[10px]">
+                        Result: {winnerLabel}
+                      </span>
+                    );
+                  })()}
                 </div>
 
                 <p className="font-black text-sm text-black line-clamp-2 uppercase group-hover:text-[#FF007A] transition-colors">

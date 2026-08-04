@@ -126,8 +126,16 @@ export function App() {
     }
   };
 
-  const isMistralWinner = battleData?.judge?.winner === 'Solution-1';
-  const isCohereWinner = battleData?.judge?.winner === 'Solution-2';
+  const isTie =
+    battleData?.judge?.winner === 'Tie' ||
+    battleData?.judge?.winner === "IT'S A TIE" ||
+    battleData?.judge?.winner === 'DRAW' ||
+    (battleData?.judge?.solution_1_score !== undefined &&
+      battleData?.judge?.solution_2_score !== undefined &&
+      battleData?.judge?.solution_1_score === battleData?.judge?.solution_2_score);
+
+  const isMistralWinner = !isTie && battleData?.judge?.winner === 'Solution-1';
+  const isCohereWinner = !isTie && battleData?.judge?.winner === 'Solution-2';
 
   return (
     <div className="min-h-screen bg-[#FFFDF5] text-black flex flex-col font-['Space_Grotesk',sans-serif]">

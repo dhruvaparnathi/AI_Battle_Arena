@@ -29,12 +29,21 @@ export const RefereeVerdict: React.FC<RefereeVerdictProps> = ({
     }
   }, [judge]);
 
-  const winnerTitle =
-    judge.winner === 'Solution-1'
-      ? model1Name
-      : judge.winner === 'Solution-2'
-      ? model2Name
-      : judge.winner;
+  const isTie =
+    judge.winner === 'Tie' ||
+    judge.winner === 'IT\'S A TIE' ||
+    judge.winner === 'DRAW' ||
+    (judge.solution_1_score !== undefined &&
+      judge.solution_2_score !== undefined &&
+      judge.solution_1_score === judge.solution_2_score);
+
+  const winnerTitle = isTie
+    ? "IT'S A TIE 🤝"
+    : judge.winner === 'Solution-1'
+    ? model1Name
+    : judge.winner === 'Solution-2'
+    ? model2Name
+    : judge.winner;
 
   return (
     <div className="bg-[#FFE600] border-4 border-black p-6 shadow-brutal-xl my-8 relative overflow-hidden">
@@ -59,7 +68,15 @@ export const RefereeVerdict: React.FC<RefereeVerdictProps> = ({
               </span>
             </div>
             <h2 className="text-3xl sm:text-4xl font-black text-black uppercase tracking-tight mt-1 flex items-center gap-2">
-              WINNER: <span className="underline decoration-[#FF007A] decoration-4">{winnerTitle}</span>
+              {isTie ? (
+                <>
+                  RESULT: <span className="underline decoration-[#00E5FF] decoration-4">{winnerTitle}</span>
+                </>
+              ) : (
+                <>
+                  WINNER: <span className="underline decoration-[#FF007A] decoration-4">{winnerTitle}</span>
+                </>
+              )}
             </h2>
           </div>
         </div>
@@ -77,7 +94,11 @@ export const RefereeVerdict: React.FC<RefereeVerdictProps> = ({
             {/* Fighter 1 Score */}
             <div
               className={`p-2 border-2 border-black ${
-                judge.winner === 'Solution-1' ? 'bg-[#7CFF00]' : 'bg-slate-100'
+                isTie
+                  ? 'bg-[#00E5FF]'
+                  : judge.winner === 'Solution-1'
+                  ? 'bg-[#7CFF00]'
+                  : 'bg-slate-100'
               }`}
             >
               <div className="text-[10px] font-mono font-bold uppercase truncate">{model1Name}</div>
@@ -90,7 +111,11 @@ export const RefereeVerdict: React.FC<RefereeVerdictProps> = ({
             {/* Fighter 2 Score */}
             <div
               className={`p-2 border-2 border-black ${
-                judge.winner === 'Solution-2' ? 'bg-[#7CFF00]' : 'bg-slate-100'
+                isTie
+                  ? 'bg-[#00E5FF]'
+                  : judge.winner === 'Solution-2'
+                  ? 'bg-[#7CFF00]'
+                  : 'bg-slate-100'
               }`}
             >
               <div className="text-[10px] font-mono font-bold uppercase truncate">{model2Name}</div>
