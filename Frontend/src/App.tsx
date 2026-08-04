@@ -40,8 +40,9 @@ export function App() {
   const [history, setHistory] = useState<BattleRecord[]>([]);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isRenderNoticeOpen, setIsRenderNoticeOpen] = useState(false);
+  const [serverStatus, setServerStatus] = useState<'idle' | 'warming' | 'online' | 'error'>('warming');
 
-  // Load history & check first-visit modal on mount
+  // Load history, check notice, & warm up Render backend in background on mount
   useEffect(() => {
     try {
       const saved = localStorage.getItem('ai_battle_history');
@@ -56,6 +57,25 @@ export function App() {
     } catch (e) {
       console.error('Failed to initialize app state from localStorage', e);
     }
+
+    // Immediately ping backend to trigger Render spin-up in background
+    const warmupBackend = async () => {
+      try {
+        setServerStatus('warming');
+        const apiBase = import.meta.env.VITE_API_URL || '';
+        const res = await fetch(`${apiBase}/ai/health`, { method: 'GET' });
+        if (res.ok) {
+          setServerStatus('online');
+        } else {
+          setServerStatus('error');
+        }
+      } catch (err) {
+        console.warn('Background server warmup ping initiated (Render instance waking up)...', err);
+        setServerStatus('error');
+      }
+    };
+
+    warmupBackend();
   }, []);
 
   const handleCloseRenderNotice = () => {
@@ -112,6 +132,7 @@ export function App() {
       const result = await response.json();
       if (result.success && result.data) {
         setBattleData(result.data);
+        setServerStatus('online');
         saveBattleRecord(userPrompt, result.data);
       } else {
         throw new Error(result.message || 'Failed to generate battle response');
@@ -142,6 +163,7 @@ export function App() {
       {/* Header */}
       <Header
         historyCount={history.length}
+        serverStatus={serverStatus}
         onOpenHistory={() => setIsHistoryOpen(true)}
         onOpenServerInfo={() => setIsRenderNoticeOpen(true)}
       />

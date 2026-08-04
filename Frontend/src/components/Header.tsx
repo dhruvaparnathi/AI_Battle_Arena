@@ -1,13 +1,19 @@
 import React from 'react';
-import { Swords, History, Sparkles, Server } from 'lucide-react';
+import { Swords, History, Server } from 'lucide-react';
 
 interface HeaderProps {
   historyCount: number;
+  serverStatus: 'idle' | 'warming' | 'online' | 'error';
   onOpenHistory: () => void;
   onOpenServerInfo: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ historyCount, onOpenHistory, onOpenServerInfo }) => {
+export const Header: React.FC<HeaderProps> = ({
+  historyCount,
+  serverStatus,
+  onOpenHistory,
+  onOpenServerInfo,
+}) => {
   return (
     <header className="border-b-4 border-black bg-[#FFE600] overflow-hidden sticky top-0 z-40">
       {/* Top Ticker Marquee */}
@@ -44,17 +50,36 @@ export const Header: React.FC<HeaderProps> = ({ historyCount, onOpenHistory, onO
               </h1>
             </div>
             <p className="text-xs font-bold text-black/80 mt-1 font-mono uppercase tracking-wider flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#7CFF00] border border-black animate-ping"></span>
-              Live Multi-Model Showdown
+              <span className={`w-2.5 h-2.5 rounded-full border border-black ${
+                serverStatus === 'online' ? 'bg-[#7CFF00] animate-ping' : serverStatus === 'warming' ? 'bg-[#FFE600] animate-bounce' : 'bg-[#FF007A]'
+              }`}></span>
+              {serverStatus === 'online' ? 'Live Multi-Model Showdown' : serverStatus === 'warming' ? 'Waking Up Backend Server...' : 'Backend Server Offline / Idle'}
             </p>
           </div>
         </div>
 
         {/* Action Controls */}
         <div className="flex items-center gap-2 sm:gap-3">
-          <div className="hidden lg:flex items-center gap-2 bg-white px-3 py-1.5 border-3 border-black shadow-brutal-sm font-mono text-xs font-bold">
-            <Sparkles className="w-4 h-4 text-[#FF007A]" />
-            <span>LangGraph Engine</span>
+          {/* Live Server Status Indicator Badge */}
+          <div
+            onClick={onOpenServerInfo}
+            className={`hidden sm:flex items-center gap-2 px-3 py-1.5 border-3 border-black shadow-brutal-sm font-mono text-xs font-extrabold uppercase cursor-pointer ${
+              serverStatus === 'online'
+                ? 'bg-[#7CFF00] text-black'
+                : serverStatus === 'warming'
+                ? 'bg-[#00E5FF] text-black animate-pulse'
+                : 'bg-[#FF007A] text-white'
+            }`}
+            title="Click for Render server details"
+          >
+            <Server className="w-4 h-4 stroke-[2.5]" />
+            <span>
+              {serverStatus === 'online'
+                ? 'SERVER ONLINE ⚡'
+                : serverStatus === 'warming'
+                ? 'WARMING BACKEND ⏳'
+                : 'SERVER IDLE 💤'}
+            </span>
           </div>
 
           <button
@@ -64,7 +89,7 @@ export const Header: React.FC<HeaderProps> = ({ historyCount, onOpenHistory, onO
             title="Render Server Status Info"
           >
             <Server className="w-4 h-4 text-[#FF007A] stroke-[2.5]" />
-            <span>SERVER INFO</span>
+            <span>INFO</span>
           </button>
 
           <button

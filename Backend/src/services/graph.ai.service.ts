@@ -33,14 +33,27 @@ type GraphState = typeof GraphAnnotation.State;
 const solutionNode = async (state: GraphState) => {
     const prompt = state.messages[0]?.content ? String(state.messages[0].content) : "";
 
-    const [mistralResult, cohereResult] = await Promise.all([
-        mistralModel.invoke(prompt),
-        cohereModel.invoke(prompt),
-    ]);
+    const mistralTask = mistralModel
+        .invoke(prompt)
+        .then((res) => String(res.content))
+        .catch((err) => {
+            console.error("Mistral AI Invocation Error:", err);
+            return `[Mistral AI error: Unable to generate response. ${err.message || String(err)}]`;
+        });
+
+    const cohereTask = cohereModel
+        .invoke(prompt)
+        .then((res) => String(res.content))
+        .catch((err) => {
+            console.error("Cohere Invocation Error:", err);
+            return `[Cohere error: Unable to generate response. ${err.message || String(err)}]`;
+        });
+
+    const [sol1, sol2] = await Promise.all([mistralTask, cohereTask]);
 
     return {
-        solution_1: String(mistralResult.content),
-        solution_2: String(cohereResult.content),
+        solution_1: sol1,
+        solution_2: sol2,
     };
 };
 
@@ -48,50 +61,62 @@ const judgeNode = async (state: GraphState) => {
     const { solution_1, solution_2, messages } = state;
     const promptList = messages.map((m) => String(m.content)).join("\n");
 
-    const judge = createAgent({
-        model: googleModel,
-        tools: [],
-        responseFormat: providerStrategy(z.object({
-            solution_1_score: z.number().min(0).max(10),
-            solution_2_score: z.number().min(0).max(10),
-            winner: z.enum(["Solution-1", "Solution-2", "Tie"]),
-            reasoning: z.string(),
-        }))
-    });
+    try {
+        const judge = createAgent({
+            model: googleModel,
+            tools: [],
+            responseFormat: providerStrategy(z.object({
+                solution_1_score: z.number().min(0).max(10),
+                solution_2_score: z.number().min(0).max(10),
+                winner: z.enum(["Solution-1", "Solution-2", "Tie"]),
+                reasoning: z.string(),
+            }))
+        });
 
-    const judgeResponse = await judge.invoke({
-        messages: [
-            new HumanMessage(
-                `You are a judge tasked with evaluating two solutions to a user's problem.
-                
-                The user asked:
-                
-                "${promptList}"
-                
-                Here are the two solutions:
-                
-                Solution 1: ${solution_1}
-                
-                Solution 2: ${solution_2}
-                
-                Please evaluate which solution better addresses the user's problem and provide a score for each solution (0-10), a detailed reasoning, and a winner ("Solution-1", "Solution-2", or "Tie").
-                
-                CRITICAL JUDGING RULE:
-                If both solutions have equal score/quality (or if solution_1_score === solution_2_score), you MUST set winner to "Tie".
-                `
-            )
-        ]
-    });
+        const judgeResponse = await judge.invoke({
+            messages: [
+                new HumanMessage(
+                    `You are a judge tasked with evaluating two solutions to a user's problem.
+                    
+                    The user asked:
+                    
+                    "${promptList}"
+                    
+                    Here are the two solutions:
+                    
+                    Solution 1: ${solution_1}
+                    
+                    Solution 2: ${solution_2}
+                    
+                    Please evaluate which solution better addresses the user's problem and provide a score for each solution (0-10), a detailed reasoning, and a winner ("Solution-1", "Solution-2", or "Tie").
+                    
+                    CRITICAL JUDGING RULE:
+                    If both solutions have equal score/quality (or if solution_1_score === solution_2_score), you MUST set winner to "Tie".
+                    `
+                )
+            ]
+        });
 
-    const result = judgeResponse.structuredResponse;
+        const result = judgeResponse.structuredResponse;
 
-    if (result && (result.solution_1_score === result.solution_2_score || result.winner === "Tie")) {
-        result.winner = "Tie";
+        if (result && (result.solution_1_score === result.solution_2_score || result.winner === "Tie")) {
+            result.winner = "Tie";
+        }
+
+        return {
+            judge: result
+        };
+    } catch (err: any) {
+        console.error("Judge Evaluation Node Error:", err);
+        return {
+            judge: {
+                winner: "Tie",
+                reasoning: `Judge evaluation fallback due to API error: ${err?.message || String(err)}`,
+                solution_1_score: 5,
+                solution_2_score: 5,
+            }
+        };
     }
-
-    return {
-        judge: result
-    };
 };
 
 const workflow = new StateGraph(GraphAnnotation)

@@ -8,9 +8,16 @@ app.use(cors());
 app.use(express.json());
 
 app.get('/', (req, res) => {
-    res.send('Hello World!');
+    res.send('AI Battle Arena Backend Server is Active');
 });
 
+app.get(['/health', '/ai/health'], (req, res) => {
+    res.status(200).json({
+        success: true,
+        status: 'online',
+        serverTime: new Date().toISOString()
+    });
+});
 
 app.post("/ai/graph", async(req, res) => {
     try {
@@ -27,11 +34,12 @@ app.post("/ai/graph", async(req, res) => {
             message: "AI Graph Service",
             data: result
         })
-    } catch (error) {
+    } catch (error: any) {
+        console.error("AI Graph Service Error:", error);
         return res.status(500).json({
             success: false,
-            message: "Error while calling AI Graph Service",
-            error: error
+            message: error?.message || "Error while calling AI Graph Service",
+            error: String(error)
         })
     }
 })
