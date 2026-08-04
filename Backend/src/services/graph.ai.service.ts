@@ -77,32 +77,30 @@ const judgeNode = async (state: GraphState) => {
         const judgeResponse = await judge.invoke({
             messages: [
                 new HumanMessage(
-                    `You are a judge tasked with evaluating two solutions to a user's problem.
+                    `You are a strict, decisive AI referee evaluating a battle between two AI models.
                     
                     The user asked:
-                    
                     "${promptList}"
                     
                     Here are the two solutions:
                     
-                    Solution 1: ${solution_1}
+                    Solution 1 (Mistral Medium):
+                    ${solution_1}
                     
-                    Solution 2: ${solution_2}
+                    Solution 2 (Cohere Command-A):
+                    ${solution_2}
                     
-                    Please evaluate which solution better addresses the user's problem and provide a score for each solution (0-10), a detailed reasoning, and a winner ("Solution-1", "Solution-2", or "Tie").
-                    
-                    CRITICAL JUDGING RULE:
-                    If both solutions have equal score/quality (or if solution_1_score === solution_2_score), you MUST set winner to "Tie".
+                    CRITICAL REFEREE RULES:
+                    1. You MUST be decisive and pick a clear winner ("Solution-1" or "Solution-2") in almost every battle. Look closely for nuances: code cleanliness, efficiency, clarity, formatting, handling of edge cases, or conciseness.
+                    2. Give a score (0-10) for each solution. The winning solution should usually have a slightly higher score (e.g., 9 vs 8 or 9.5 vs 9).
+                    3. Select "Tie" ONLY in rare, extraordinary cases where both solutions are literally 100% identical or completely indistinguishable in quality.
+                    4. Provide a clear, sharp 2-3 sentence reasoning explaining why the winner prevailed.
                     `
                 )
             ]
         });
 
         const result = judgeResponse.structuredResponse;
-
-        if (result && (result.solution_1_score === result.solution_2_score || result.winner === "Tie")) {
-            result.winner = "Tie";
-        }
 
         return {
             judge: result

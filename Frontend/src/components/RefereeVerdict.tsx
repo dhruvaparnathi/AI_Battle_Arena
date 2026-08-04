@@ -32,10 +32,7 @@ export const RefereeVerdict: React.FC<RefereeVerdictProps> = ({
   const isTie =
     judge.winner === 'Tie' ||
     judge.winner === 'IT\'S A TIE' ||
-    judge.winner === 'DRAW' ||
-    (judge.solution_1_score !== undefined &&
-      judge.solution_2_score !== undefined &&
-      judge.solution_1_score === judge.solution_2_score);
+    judge.winner === 'DRAW';
 
   const winnerTitle = isTie
     ? "IT'S A TIE 🤝"

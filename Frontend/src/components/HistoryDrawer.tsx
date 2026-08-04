@@ -66,10 +66,7 @@ export const HistoryDrawer: React.FC<HistoryDrawerProps> = ({
                     const isTie =
                       item.data.judge.winner === 'Tie' ||
                       item.data.judge.winner === "IT'S A TIE" ||
-                      item.data.judge.winner === 'DRAW' ||
-                      (item.data.judge.solution_1_score !== undefined &&
-                        item.data.judge.solution_2_score !== undefined &&
-                        item.data.judge.solution_1_score === item.data.judge.solution_2_score);
+                      item.data.judge.winner === 'DRAW';
                     const winnerLabel = isTie
                       ? 'Tie 🤝'
                       : item.data.judge.winner === 'Solution-1'

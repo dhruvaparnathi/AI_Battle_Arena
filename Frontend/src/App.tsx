@@ -153,10 +153,7 @@ export function App() {
   const isTie =
     battleData?.judge?.winner === 'Tie' ||
     battleData?.judge?.winner === "IT'S A TIE" ||
-    battleData?.judge?.winner === 'DRAW' ||
-    (battleData?.judge?.solution_1_score !== undefined &&
-      battleData?.judge?.solution_2_score !== undefined &&
-      battleData?.judge?.solution_1_score === battleData?.judge?.solution_2_score);
+    battleData?.judge?.winner === 'DRAW';
 
   const isMistralWinner = !isTie && battleData?.judge?.winner === 'Solution-1';
   const isCohereWinner = !isTie && battleData?.judge?.winner === 'Solution-2';
