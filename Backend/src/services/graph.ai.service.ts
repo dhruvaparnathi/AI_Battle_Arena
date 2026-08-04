@@ -69,7 +69,7 @@ const judgeNode = async (state: GraphState) => {
             responseFormat: providerStrategy(z.object({
                 solution_1_score: z.number().min(0).max(10),
                 solution_2_score: z.number().min(0).max(10),
-                winner: z.enum(["Solution-1", "Solution-2", "Tie"]),
+                winner: z.enum(["Solution-1", "Solution-2"]),
                 reasoning: z.string(),
             }))
         });
@@ -92,9 +92,8 @@ const judgeNode = async (state: GraphState) => {
                     
                     CRITICAL REFEREE RULES:
                     1. You MUST be decisive and pick a clear winner ("Solution-1" or "Solution-2") in almost every battle. Look closely for nuances: code cleanliness, efficiency, clarity, formatting, handling of edge cases, or conciseness.
-                    2. Give a score (0-10) for each solution. The winning solution should usually have a slightly higher score (e.g., 9 vs 8 or 9.5 vs 9).
-                    3. Select "Tie" ONLY in rare, extraordinary cases where both solutions are literally 100% identical or completely indistinguishable in quality.
-                    4. Provide a clear, sharp 2-3 sentence reasoning explaining why the winner prevailed.
+                    2. Give a score (0-10) for each solution.
+                    3. Provide a clear, sharp 2-3 sentence reasoning explaining why the winner prevailed.
                     `
                 )
             ]
@@ -109,10 +108,10 @@ const judgeNode = async (state: GraphState) => {
         console.error("Judge Evaluation Node Error:", err);
         return {
             judge: {
-                winner: "Tie",
+                winner: "No winner determined",
                 reasoning: `Judge evaluation fallback due to API error: ${err?.message || String(err)}`,
-                solution_1_score: 5,
-                solution_2_score: 5,
+                solution_1_score: -1,
+                solution_2_score: -1,
             }
         };
     }
@@ -135,4 +134,4 @@ export default async function useGraph(userMessage: string) {
         ]
     });
     return result;
-}
+}
