@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Copy, Check, Crown, Bot, Terminal } from 'lucide-react';
+import { Copy, Check, Crown, Bot, Terminal, Clock } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import type { ModelMetadata } from '../types';
@@ -13,6 +13,75 @@ interface FighterCardProps {
   isWinner: boolean;
   isLoading: boolean;
 }
+
+const CodeBlock: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [copiedCode, setCopiedCode] = useState(false);
+
+  // Extract raw text recursively from React nodes
+  const extractText = (node: React.ReactNode): string => {
+    if (typeof node === 'string') return node;
+    if (typeof node === 'number') return String(node);
+    if (Array.isArray(node)) return node.map(extractText).join('');
+    if (React.isValidElement(node) && (node.props as any)?.children) {
+      return extractText((node.props as any).children);
+    }
+    return '';
+  };
+
+  const rawCode = extractText(children).replace(/\n$/, '');
+
+  // Extract language from code element className if present
+  let lang = 'CODE';
+  if (React.isValidElement(children) && (children.props as any)?.className) {
+    const match = /language-(\w+)/.exec(String((children.props as any).className));
+    if (match && match[1]) {
+      lang = match[1].toUpperCase();
+    }
+  }
+
+  const handleCopyCode = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    navigator.clipboard.writeText(rawCode);
+    setCopiedCode(true);
+    setTimeout(() => setCopiedCode(false), 2000);
+  };
+
+  return (
+    <div className="my-4 border-3 border-black bg-black shadow-brutal-sm text-left overflow-hidden">
+      {/* Code Block Toolbar Header */}
+      <div className="flex items-center justify-between bg-zinc-900 px-3 py-1.5 border-b-2 border-black">
+        <div className="flex items-center gap-1.5 text-xs font-mono font-bold text-[#FFE600] uppercase tracking-wider">
+          <Terminal className="w-3.5 h-3.5 text-[#00E5FF]" />
+          <span>{lang} SNIPPET</span>
+        </div>
+        <button
+          onClick={handleCopyCode}
+          type="button"
+          className="flex items-center gap-1.5 bg-[#00E5FF] hover:bg-[#7CFF00] text-black font-mono font-black text-[11px] px-2.5 py-0.5 border-2 border-black shadow-brutal-xs active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer uppercase"
+          title="Copy code snippet only"
+        >
+          {copiedCode ? (
+            <>
+              <Check className="w-3 h-3 text-black stroke-[3]" />
+              <span>COPIED CODE</span>
+            </>
+          ) : (
+            <>
+              <Copy className="w-3 h-3 text-black stroke-[3]" />
+              <span>COPY CODE</span>
+            </>
+          )}
+        </button>
+      </div>
+
+      {/* Code content */}
+      <pre className="p-4 text-[#FFE600] overflow-x-auto font-mono text-xs leading-relaxed selection:bg-[#FFE600] selection:text-black">
+        {children}
+      </pre>
+    </div>
+  );
+};
 
 export const FighterCard: React.FC<FighterCardProps> = ({
   id,
@@ -95,19 +164,23 @@ export const FighterCard: React.FC<FighterCardProps> = ({
       {/* Content Area */}
       <div className="p-4 flex-1 flex flex-col justify-between gap-4 min-h-[360px] bg-slate-50">
         {isLoading ? (
-          <div className="flex-1 flex flex-col items-center justify-center py-16 gap-3">
+          <div className="flex-1 flex flex-col items-center justify-center py-12 gap-3 text-center px-4">
             <div className="w-12 h-12 border-4 border-black border-t-[#FF007A] rounded-full animate-spin"></div>
             <p className="font-mono text-sm font-bold animate-pulse text-black">
               Generating Fighter Solution...
             </p>
+            <div className="bg-[#FFE600]/40 border-2 border-black p-2.5 max-w-xs mt-2 text-xs font-mono font-semibold text-black flex items-center gap-2 shadow-brutal-xs">
+              <Clock className="w-4 h-4 text-black shrink-0" />
+              <span>Render free backend may take ~50s on initial cold start...</span>
+            </div>
           </div>
         ) : solutionText ? (
           <div className="relative group flex-1 flex flex-col">
-            {/* Copy Button */}
+            {/* Copy Full Solution Button */}
             <button
               onClick={handleCopy}
               className="absolute top-2 right-2 z-20 bg-black hover:bg-slate-800 text-white p-2 border-2 border-black shadow-brutal-sm active:translate-x-0.5 active:translate-y-0.5 transition-all text-xs font-mono font-bold flex items-center gap-1 cursor-pointer"
-              title="Copy solution"
+              title="Copy entire solution text"
             >
               {copied ? (
                 <>
@@ -117,7 +190,7 @@ export const FighterCard: React.FC<FighterCardProps> = ({
               ) : (
                 <>
                   <Copy className="w-3.5 h-3.5" />
-                  <span>COPY</span>
+                  <span>COPY ALL</span>
                 </>
               )}
             </button>
@@ -152,7 +225,6 @@ export const FighterCard: React.FC<FighterCardProps> = ({
                     <li className="leading-relaxed font-sans">{children}</li>
                   ),
                   code: ({ className, children }) => {
-
                     const isInline = !className;
                     return isInline ? (
                       <code className="bg-black text-[#FFE600] font-mono text-xs px-1.5 py-0.5 border border-black font-bold">
@@ -162,11 +234,7 @@ export const FighterCard: React.FC<FighterCardProps> = ({
                       <code className="font-mono text-xs text-[#FFE600]">{children}</code>
                     );
                   },
-                  pre: ({ children }) => (
-                    <pre className="bg-black text-[#FFE600] p-4 border-3 border-black shadow-brutal-sm overflow-x-auto font-mono text-xs my-4 leading-relaxed">
-                      {children}
-                    </pre>
-                  ),
+                  pre: ({ children }) => <CodeBlock>{children}</CodeBlock>,
                   table: ({ children }) => (
                     <div className="overflow-x-auto my-4 border-3 border-black shadow-brutal-sm">
                       <table className="w-full text-left border-collapse font-sans text-xs">{children}</table>

@@ -1,13 +1,13 @@
 import React from 'react';
-import { Swords, History, Sparkles } from 'lucide-react';
-
+import { Swords, History, Sparkles, Server } from 'lucide-react';
 
 interface HeaderProps {
   historyCount: number;
   onOpenHistory: () => void;
+  onOpenServerInfo: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ historyCount, onOpenHistory }) => {
+export const Header: React.FC<HeaderProps> = ({ historyCount, onOpenHistory, onOpenServerInfo }) => {
   return (
     <header className="border-b-4 border-black bg-[#FFE600] overflow-hidden sticky top-0 z-40">
       {/* Top Ticker Marquee */}
@@ -51,16 +51,26 @@ export const Header: React.FC<HeaderProps> = ({ historyCount, onOpenHistory }) =
         </div>
 
         {/* Action Controls */}
-        <div className="flex items-center gap-3">
-          <div className="hidden md:flex items-center gap-2 bg-white px-3 py-1.5 border-3 border-black shadow-brutal-sm font-mono text-xs font-bold">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="hidden lg:flex items-center gap-2 bg-white px-3 py-1.5 border-3 border-black shadow-brutal-sm font-mono text-xs font-bold">
             <Sparkles className="w-4 h-4 text-[#FF007A]" />
             <span>LangGraph Engine</span>
           </div>
 
           <button
+            onClick={onOpenServerInfo}
+            id="server-info-btn"
+            className="flex items-center gap-1.5 bg-white hover:bg-zinc-100 text-black font-extrabold text-xs sm:text-sm px-3 sm:px-4 py-2 border-3 border-black shadow-brutal active:translate-x-1 active:translate-y-1 active:shadow-none transition-all cursor-pointer font-mono"
+            title="Render Server Status Info"
+          >
+            <Server className="w-4 h-4 text-[#FF007A] stroke-[2.5]" />
+            <span>SERVER INFO</span>
+          </button>
+
+          <button
             onClick={onOpenHistory}
             id="history-btn"
-            className="flex items-center gap-2 bg-[#00E5FF] hover:bg-[#00cce6] text-black font-extrabold text-sm px-4 py-2 border-3 border-black shadow-brutal active:translate-x-1 active:translate-y-1 active:shadow-none transition-all cursor-pointer"
+            className="flex items-center gap-2 bg-[#00E5FF] hover:bg-[#00cce6] text-black font-extrabold text-xs sm:text-sm px-3 sm:px-4 py-2 border-3 border-black shadow-brutal active:translate-x-1 active:translate-y-1 active:shadow-none transition-all cursor-pointer font-mono"
           >
             <History className="w-4 h-4 stroke-[3]" />
             <span>BATTLES</span>

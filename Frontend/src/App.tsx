@@ -3,9 +3,9 @@ import { Header } from './components/Header';
 import { FighterCard } from './components/FighterCard';
 import { RefereeVerdict } from './components/RefereeVerdict';
 import { HistoryDrawer } from './components/HistoryDrawer';
+import { RenderNoticeModal } from './components/RenderNoticeModal';
 import type { GraphResponse, BattleRecord, ModelMetadata } from './types';
-import { Send, Zap, AlertCircle, RefreshCw, Flame, Code2, BrainCircuit } from 'lucide-react';
-
+import { Send, Zap, AlertCircle, RefreshCw, Flame, Code2, BrainCircuit, Server } from 'lucide-react';
 
 const MISTRAL_META: ModelMetadata = {
   name: 'Mistral Medium',
@@ -39,18 +39,33 @@ export function App() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [history, setHistory] = useState<BattleRecord[]>([]);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [isRenderNoticeOpen, setIsRenderNoticeOpen] = useState(false);
 
-  // Load history from localStorage
+  // Load history & check first-visit modal on mount
   useEffect(() => {
     try {
       const saved = localStorage.getItem('ai_battle_history');
       if (saved) {
         setHistory(JSON.parse(saved));
       }
+
+      const noticeSeen = localStorage.getItem('ai_battle_render_notice_seen');
+      if (!noticeSeen) {
+        setIsRenderNoticeOpen(true);
+      }
     } catch (e) {
-      console.error('Failed to load battle history', e);
+      console.error('Failed to initialize app state from localStorage', e);
     }
   }, []);
+
+  const handleCloseRenderNotice = () => {
+    setIsRenderNoticeOpen(false);
+    try {
+      localStorage.setItem('ai_battle_render_notice_seen', 'true');
+    } catch (e) {
+      console.error('Failed to set notice state in localStorage', e);
+    }
+  };
 
   const saveBattleRecord = (prompt: string, data: GraphResponse) => {
     const record: BattleRecord = {
@@ -117,57 +132,93 @@ export function App() {
   return (
     <div className="min-h-screen bg-[#FFFDF5] text-black flex flex-col font-['Space_Grotesk',sans-serif]">
       {/* Header */}
-      <Header historyCount={history.length} onOpenHistory={() => setIsHistoryOpen(true)} />
+      <Header
+        historyCount={history.length}
+        onOpenHistory={() => setIsHistoryOpen(true)}
+        onOpenServerInfo={() => setIsRenderNoticeOpen(true)}
+      />
 
       {/* Main Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-8 flex flex-col gap-8">
         
         {/* Battle Arena Hero Banner */}
-        <section className="bg-white border-4 border-black p-6 shadow-brutal-xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 bg-[#FF007A] text-white px-4 py-1 font-mono font-black text-xs uppercase border-b-3 border-l-3 border-black shadow-brutal-sm">
-            LANGGRAPH WORKFLOW
+        <section className="bg-[#00E5FF] border-4 border-black p-6 sm:p-8 shadow-brutal relative overflow-hidden">
+          <div className="absolute -right-10 -bottom-10 opacity-10 pointer-events-none text-black font-black text-9xl font-mono select-none">
+            VS
           </div>
 
-          <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 bg-[#FFE600] text-black px-3 py-1 border-2 border-black text-xs font-black uppercase mb-3 shadow-brutal-sm">
-              <Flame className="w-4 h-4 fill-black" />
-              LLM HEAVYWEIGHT BATTLE
+          <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+            <div>
+              <div className="inline-flex items-center gap-2 bg-black text-white font-mono text-xs font-bold px-3 py-1 mb-3 uppercase tracking-wider">
+                <Flame className="w-4 h-4 text-[#FFE600] fill-[#FFE600]" />
+                Autonomous Model Arena
+              </div>
+              <h2 className="text-3xl sm:text-5xl font-black uppercase text-black tracking-tight leading-tight">
+                Prompt The Contenders. <br />
+                <span className="bg-black text-[#FFE600] px-2 py-0.5 inline-block shadow-brutal-sm">
+                  Crown The Champion.
+                </span>
+              </h2>
             </div>
-            <h2 className="text-3xl sm:text-5xl font-black uppercase tracking-tight text-black leading-none mb-3">
-              MISTRAL vs COHERE
-            </h2>
-            <p className="text-sm sm:text-base font-mono font-medium text-black/80 leading-relaxed">
-              Submit any challenge, question, or code task. Both models generate solutions in parallel via LangGraph. <span className="bg-[#00E5FF] px-1 font-bold">Google Gemini</span> acts as ring referee to score and crown the victor!
-            </p>
-          </div>
 
-          {/* Prompt Form */}
-          <form onSubmit={handleFight} className="mt-6 flex flex-col gap-4">
+            <div className="bg-white border-3 border-black p-4 shadow-brutal-sm max-w-xs text-xs font-mono font-bold leading-relaxed text-black">
+              ⚡ Multi-agent pipeline via LangGraph orchestrates response generation & autonomous evaluation in parallel.
+            </div>
+          </div>
+        </section>
+
+        {/* Input Form Section */}
+        <section className="bg-white border-4 border-black p-6 shadow-brutal">
+          <form onSubmit={handleFight} className="space-y-4">
+            <div className="flex items-center justify-between">
+              <label htmlFor="user-prompt-input" className="block text-sm font-black uppercase tracking-wider text-black flex items-center gap-2">
+                <Zap className="w-4 h-4 text-[#FF007A] fill-[#FF007A]" />
+                Enter Challenge / Problem Prompt:
+              </label>
+              <span className="text-xs font-mono font-bold text-black/60">
+                Markdown & Code supported
+              </span>
+            </div>
+
             <div className="relative">
               <textarea
+                id="user-prompt-input"
                 value={userPrompt}
                 onChange={(e) => setUserPrompt(e.target.value)}
-                placeholder="Enter prompt for the battle arena... (e.g. Write a TypeScript solution for LRU Cache)"
+                placeholder="e.g. Write an optimized Dijkstra shortest path algorithm in Python with detailed complexity analysis..."
                 rows={3}
-                className="w-full bg-[#FFFDF5] border-4 border-black p-4 font-mono text-base font-medium text-black focus:outline-none focus:ring-4 focus:ring-[#FFE600] shadow-brutal placeholder:text-black/40 resize-y"
+                className="w-full bg-[#FFFDF5] border-3 border-black p-4 text-black font-mono text-sm placeholder:text-black/40 focus:outline-none focus:ring-4 focus:ring-[#FFE600] shadow-inner font-medium resize-none"
               />
             </div>
 
             {/* Quick Sample Prompts */}
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-xs font-mono font-black uppercase text-black/60 mr-1 flex items-center gap-1">
-                <Zap className="w-3.5 h-3.5 text-[#FF007A]" /> QUICK PROMPTS:
-              </span>
+            <div className="flex flex-wrap items-center gap-2 pt-1">
+              <span className="text-xs font-mono font-bold uppercase text-black/70 mr-1">Quick Prompts:</span>
               {SAMPLE_PROMPTS.map((prompt, idx) => (
                 <button
                   key={idx}
                   type="button"
                   onClick={() => setUserPrompt(prompt)}
-                  className="text-xs font-mono font-bold bg-slate-100 hover:bg-[#FFE600] text-black px-3 py-1.5 border-2 border-black shadow-brutal-sm active:translate-x-0.5 active:translate-y-0.5 transition-all text-left truncate max-w-[280px] cursor-pointer"
+                  className="text-xs font-mono bg-[#FFFDF5] hover:bg-[#FFE600] text-black font-bold px-2.5 py-1 border-2 border-black shadow-brutal-xs transition-colors cursor-pointer text-left truncate max-w-[280px]"
                 >
-                  {prompt}
+                  "{prompt}"
                 </button>
               ))}
+            </div>
+
+            {/* Render Free Tier Info Notice Line */}
+            <div className="bg-[#FFE600]/30 border-2 border-black p-2.5 flex items-center justify-between text-xs font-mono font-bold text-black">
+              <span className="flex items-center gap-2 truncate">
+                <Server className="w-4 h-4 text-[#FF007A] shrink-0" />
+                <span className="truncate">Note: Initial prompt may take ~50s while Render free backend instance spins up.</span>
+              </span>
+              <button
+                type="button"
+                onClick={() => setIsRenderNoticeOpen(true)}
+                className="underline font-black text-black hover:text-[#FF007A] ml-2 shrink-0 cursor-pointer"
+              >
+                INFO
+              </button>
             </div>
 
             {/* Submit Action */}
@@ -262,6 +313,12 @@ export function App() {
           setBattleData(rec.data);
         }}
         onClearHistory={handleClearHistory}
+      />
+
+      {/* Render Server Info Notice Modal */}
+      <RenderNoticeModal
+        isOpen={isRenderNoticeOpen}
+        onClose={handleCloseRenderNotice}
       />
 
       {/* Brutalist Footer */}
