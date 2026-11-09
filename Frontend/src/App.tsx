@@ -8,12 +8,12 @@ import type { GraphResponse, BattleRecord, ModelMetadata } from './types';
 import { Send, Zap, AlertCircle, RefreshCw, Flame, Code2, BrainCircuit, Server } from 'lucide-react';
 
 const MISTRAL_META: ModelMetadata = {
-  name: 'Mistral Medium',
+  name: 'Codestral',
   provider: 'Mistral AI',
   badgeColor: 'bg-[#FF007A] text-white',
   avatarBg: 'bg-[#FFE600]',
   textColor: 'text-[#FF007A]',
-  description: 'Fast, efficient European open-weights powerhouse.',
+  description: 'Fast, efficient European code & reasoning powerhouse.',
 };
 
 const COHERE_META: ModelMetadata = {
